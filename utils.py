@@ -111,6 +111,8 @@ def get_municipal_dataset():
         DF.rename_fields(renames, regex=False),
         DF.filter_rows(lambda row: bool(row['name'])),
         DF.set_type('name', transform=lambda v: v.replace('*', '').strip()),
+        DF.validate(),
+        DF.set_type('jewish', transform=lambda v: v or 0),
         DF.printer()
     ).results()[0][0]
     socioeconomic_index = dict((x['name'], x) for x in socioeconomic_index)

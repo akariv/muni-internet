@@ -1,11 +1,11 @@
 {
-  "bytes": 55955,
+  "bytes": 56000,
   "count_of_rows": 269,
-  "hash": "d74bdd7f986e24660ec7bb499892522f",
+  "hash": "d43518644ca98ee58d87af95fc080652",
   "profile": "data-package",
   "resources": [
     {
-      "bytes": 55955,
+      "bytes": 56000,
       "dialect": {
         "caseSensitiveHeader": false,
         "delimiter": ",",
@@ -17,7 +17,7 @@
       },
       "encoding": "utf-8",
       "format": "csv",
-      "hash": "b729885604e92c01dc00ed20389b9ebc",
+      "hash": "a48b3331d63b702ba4442603100bffe6",
       "name": "results",
       "path": "results.csv",
       "profile": "tabular-data-resource",
@@ -46,11 +46,9 @@
             "type": "integer"
           },
           {
-            "decimalChar": ".",
             "format": "default",
-            "groupChar": "",
             "name": "jewish",
-            "type": "number"
+            "type": "any"
           },
           {
             "decimalChar": ".",

@@ -1,10 +1,12 @@
 import json
+from os import rename
 from pathlib import Path
 import requests
 import shutil
 from shapely.geometry import shape, Point
 from pyqtree import Index
 from fuzzywuzzy.process import extractOne
+from decimal import Decimal
 
 
 def download(url, outfile):
@@ -50,7 +52,7 @@ def fiona_to_index(db, bounds):
 
 def translate_muni_name(name, seindex, cache):
     if name in cache:
-        return cache[name]
+        return
 
     query_name = {
         'Deir el Asad': 'Deir al Asad',
@@ -75,8 +77,8 @@ def translate_muni_name(name, seindex, cache):
             # if score < 100:
             #     print('TRANSLATED', name, '->', heb, '->', official, score if score < 100 else '')
             official = seindex[official]
-            cache[name] = dict(name=official['name'], seindex=float(official['value']))
-            return heb
+            cache[name] = dict((k, float(v) if isinstance(v, Decimal) else v) for k, v in official.items())
+            return
         print('NOT FOUND IN SEINDEX', name, '->', heb, '->', official, score)
     print('NOT TRANSLATED', name)
     cache[name] = None    
@@ -91,13 +93,22 @@ def get_municipal_dataset():
 
     import dataflows as DF
     download('https://www.cbs.gov.il/he/publications/doclib/2019/hamakomiot1999_2017/2019.xlsx', Path('data/rashuiot.xlsx'))
+    renames = {
+            'שם  הרשות': 'name',
+            'ערך מדד (1)': 'seindex',
+            'מרחק מגבול מחוז תל אביב (ק"מ)': 'distance',
+            "צפיפות אוכלוסייה לקמ''ר ביישובים שמנו 5,000 תושבים ויותר": 'density',
+            'סה"כ  אוכלוסייה בסוף השנה': 'population',
+            'יהודים (אחוזים)': 'jewish',
+            'שכר ממוצע לחודש של שכירים (ש"ח)': 'salary',
+            'אחוז זכאים לתעודת בגרות מבין תלמידי כיתות יב': 'bagrut',
+            'ערך מדד (3)': 'periphery',
+        }
     socioeconomic_index = DF.Flow(
         DF.load('data/rashuiot.xlsx', sheet='נתונים פיזיים ונתוני אוכלוסייה ', headers=4, deduplicate_headers=True, skip_rows=[5]),
-        DF.select_fields(['שם  הרשות', 'ערך מדד (1)'], regex=False),
-        DF.rename_fields({
-            'שם  הרשות': 'name',
-            'ערך מדד (1)': 'value'
-        }, regex=False),
+        DF.select_fields(list(renames.keys()), regex=False),
+        DF.update_schema(-1, missingValues=['..', '-']),
+        DF.rename_fields(renames, regex=False),
         DF.filter_rows(lambda row: bool(row['name'])),
         DF.set_type('name', transform=lambda v: v.replace('*', '').strip()),
         DF.printer()
